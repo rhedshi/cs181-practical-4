@@ -15,7 +15,11 @@ _| _| _| _| _|_
 def transModel(s, a):
     """Return the probabilities of reaching the next state given state s
     and action a"""
+
     probs = np.zeros(num_s)
+
+    """new_s[i] are possible states for action i, where new_s[i,0] has 60%
+    probability and new_s[i,j] for j=1,2,3 has 10% probability each"""
     new_s = np.array([[0, 0, 0, 0],
                       [1, 8, 12, 14, 0],
                       [2, 7, 13, 16, 0],

@@ -43,15 +43,19 @@ def solveV(pi, gamma=0.5):
     v[101] = 1
     v[102:num_s-1] = -1
 
+    vSub = np.zeros(s_stop+1)
+
     #These are subarrays of s and pi up to s_stop
     sSub = np.arange(s_stop, dtype=float)
     piSub = pi[:s_stop]
 
     trans = darts.transModel(sSub, piSub)
-    a = trans - np.identity(num_s)[:s_stop]/gamma
+    a = trans[:,:s_stop] - np.identity(s_stop)/gamma
 
     b = trans[:,101] - np.sum(trans[:,102:117],1)
 
-    v = np.linalg.lstsq(a,b)[0]
+    vSub = np.linalg.solve(a,b)
+
+    v[:s_stop] = vSub
 
     return v

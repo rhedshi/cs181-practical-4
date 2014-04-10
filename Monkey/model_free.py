@@ -9,20 +9,20 @@ from SwingyMonkey import SwingyMonkey
 
 
 alpha = 0.5
-gamma = 0.1
+gamma = 0.5
 
 tree_bot_range = (0, 400)
-tree_bot_bins = 5
+tree_bot_bins = 10
 tree_top_range = (0, 400)
-tree_top_bins = 5
+tree_top_bins = 10
 tree_dist_range = (0, 600)
-tree_dist_bins = 5
+tree_dist_bins = 10
 monkey_vel_range = (-50,50)
-monkey_vel_bins = 5
+monkey_vel_bins = 10
 monkey_bot_range = (0, 450)
-monkey_bot_bins = 5
+monkey_bot_bins = 10
 monkey_top_range = (0, 450)
-monkey_top_bins = 5
+monkey_top_bins = 10
 
 
 def bin(value, range, bins):
@@ -31,14 +31,14 @@ def bin(value, range, bins):
 
 def basis_dimensions():
     return (\
-        # tree_bot_bins, tree_top_bins, tree_dist_bins, \
+        tree_bot_bins, tree_top_bins, tree_dist_bins, \
         monkey_vel_bins, monkey_bot_bins, monkey_top_bins)
 
 def basis(state):
     return (\
-            # bin(state["tree"]["bot"],tree_bot_range,tree_bot_bins),    \
-            # bin(state["tree"]["top"],tree_top_range,tree_top_bins),    \
-            # bin(state["tree"]["dist"],tree_dist_range,tree_dist_bins), \
+            bin(state["tree"]["bot"],tree_bot_range,tree_bot_bins),    \
+            bin(state["tree"]["top"],tree_top_range,tree_top_bins),    \
+            bin(state["tree"]["dist"],tree_dist_range,tree_dist_bins), \
 
             bin(state["monkey"]["vel"],monkey_vel_range,monkey_vel_bins), \
             bin(state["monkey"]["bot"],monkey_bot_range,monkey_bot_bins), \
@@ -54,7 +54,7 @@ class Learner:
         self.last_reward = None
 
         dims = basis_dimensions() + (2,)
-        self.Q = np.random.random_sample(dims)
+        self.Q = np.zeros(dims)
 
     def reset(self):
         self.current_state  = None
@@ -91,18 +91,19 @@ class Learner:
             sp = basis(self.current_state)
             a  = (self.last_action,)
 
-            print s + a , " : ", self.Q[s + a]
-            print sp + a, " : ", self.Q[sp + a]
-            print reward
-            print '-------'
+            # print s + a , " : ", self.Q[s + a]
+            # print sp + a, " : ", self.Q[sp + a]
+            # print reward
+            # print '-------'
 
-            self.Q[s + a] = self.Q[s + a] + alpha * (reward + gamma * np.max(self.Q[sp + a]) - self.Q[s + a] )
+            self.Q[s + a] = self.Q[s + a] + alpha * (reward + gamma * np.max(self.Q[sp]) - self.Q[s + a] )
 
         self.last_reward = reward
 
 
 iters = 1000
 learner = Learner()
+highscore = 0
 
 for ii in xrange(iters):
 
@@ -117,6 +118,8 @@ for ii in xrange(iters):
     while swing.game_loop():
         pass
 
+    highscore = max([highscore, swing.get_state()['score']])
+    print highscore
     # Reset the state of the learner.
     learner.reset()
 

@@ -41,7 +41,7 @@ def solveV(pi, gamma=0.5):
 
     #These are set because they end the game
     v[101] = 1
-    v[102:num_s-1] = -1
+    v[102:num_s] = -1
 
     vSub = np.zeros(s_stop+1)
 
@@ -52,7 +52,7 @@ def solveV(pi, gamma=0.5):
     trans = darts.transModel(sSub, piSub)
     a = trans[:,:s_stop] - np.identity(s_stop)/gamma
 
-    b = trans[:,101] - np.sum(trans[:,102:117],1)
+    b = np.sum(trans[:,102:117],1) - trans[:,101]
 
     vSub = np.linalg.solve(a,b)
 

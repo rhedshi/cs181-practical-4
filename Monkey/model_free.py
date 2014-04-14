@@ -8,8 +8,8 @@ import math
 from SwingyMonkey import SwingyMonkey
 
 
-alpha = 0.5
-gamma = 0.5
+alpha = 0.1
+gamma = 0.1
 
 tree_bot_range = (0, 400)
 tree_bot_bins = 10
@@ -22,7 +22,7 @@ monkey_vel_bins = 10
 monkey_bot_range = (0, 450)
 monkey_bot_bins = 10
 monkey_top_range = (0, 450)
-monkey_top_bins = 10
+monkey_top_bins = 1
 
 
 def bin(value, range, bins):
@@ -56,6 +56,9 @@ class Learner:
         dims = basis_dimensions() + (2,)
         self.Q = np.zeros(dims)
 
+        'Number of times taken action a from each state s'
+        self.k = np.zeros(dims)
+
     def reset(self):
         self.current_state  = None
         self.last_state  = None
@@ -78,6 +81,10 @@ class Learner:
         self.last_state  = self.current_state
         self.current_state = new_state
 
+        s  = basis(state)
+        a  = (self.last_action,)
+        self.k[s + a] += 1
+
         # print state
         # print self.last_action
         # print self.Q
@@ -95,6 +102,13 @@ class Learner:
             # print sp + a, " : ", self.Q[sp + a]
             # print reward
             # print '-------'
+
+            # attempt at variable k
+            """if self.k[s + a] < 3:
+                alpha = 0.5
+            else:
+                alpha = 1.0 / self.k[s + a]
+                """
 
             self.Q[s + a] = self.Q[s + a] + alpha * (reward + gamma * np.max(self.Q[sp]) - self.Q[s + a] )
 
@@ -125,4 +139,4 @@ for ii in xrange(iters):
 
 
 
-    
+

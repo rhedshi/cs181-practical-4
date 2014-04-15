@@ -8,7 +8,25 @@ import math
 from SwingyMonkey import SwingyMonkey
 
 
+<<<<<<< HEAD
 
+=======
+alpha = 0.1
+gamma = 0.1
+
+tree_bot_range = (0, 400)
+tree_bot_bins = 10
+tree_top_range = (0, 400)
+tree_top_bins = 10
+tree_dist_range = (0, 600)
+tree_dist_bins = 10
+monkey_vel_range = (-50,50)
+monkey_vel_bins = 10
+monkey_bot_range = (0, 450)
+monkey_bot_bins = 10
+monkey_top_range = (0, 450)
+monkey_top_bins = 1
+>>>>>>> 2701588af1d8ba2e930c0500f076e54d0b406d2f
 
 
 
@@ -41,6 +59,8 @@ class ModelFreeLearner:
         dims = self.basis_dimensions() + (2,)
         self.Q = np.zeros(dims)
 
+        'Number of times taken action a from each state s'
+        self.k = np.zeros(dims)
 
     def reset(self):
         self.current_state  = None
@@ -64,6 +84,10 @@ class ModelFreeLearner:
         self.last_state  = self.current_state
         self.current_state = new_state
 
+        s  = basis(state)
+        a  = (self.last_action,)
+        self.k[s + a] += 1
+
         # print state
         # print self.last_action
         # print self.Q
@@ -83,6 +107,15 @@ class ModelFreeLearner:
             # print '-------'
 
             self.Q[s + a] = self.Q[s + a] + self.alpha * (reward + self.gamma * np.max(self.Q[sp]) - self.Q[s + a] )
+
+            # attempt at variable k
+            """if self.k[s + a] < 3:
+                alpha = 0.5
+            else:
+                alpha = 1.0 / self.k[s + a]
+                """
+
+            self.Q[s + a] = self.Q[s + a] + alpha * (reward + gamma * np.max(self.Q[sp]) - self.Q[s + a] )
 
         self.last_reward = reward
 
@@ -153,5 +186,6 @@ for alpha in np.arange(0.3,0.4,0.02):
         if value < best_value:
             best_parameters = parameters
             print "Best: ",parameters, " : ", value
+
 
 print best_parameters

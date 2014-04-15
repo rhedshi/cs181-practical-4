@@ -8,28 +8,6 @@ import math
 from SwingyMonkey import SwingyMonkey
 
 
-<<<<<<< HEAD
-
-=======
-alpha = 0.1
-gamma = 0.1
-
-tree_bot_range = (0, 400)
-tree_bot_bins = 10
-tree_top_range = (0, 400)
-tree_top_bins = 10
-tree_dist_range = (0, 600)
-tree_dist_bins = 10
-monkey_vel_range = (-50,50)
-monkey_vel_bins = 10
-monkey_bot_range = (0, 450)
-monkey_bot_bins = 10
-monkey_top_range = (0, 450)
-monkey_top_bins = 1
->>>>>>> 2701588af1d8ba2e930c0500f076e54d0b406d2f
-
-
-
 class ModelFreeLearner:
 
     def __init__(self):

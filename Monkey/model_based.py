@@ -21,11 +21,15 @@ class ModelBasedLearner:
         self.monkey_top_range = (0, 450)
         self.monkey_top_bins = 10
 
+        self.gamma = 0.5
 
         dims = self.basis_dimensions()
         self.N = np.zeros(dims + (2,))
         self.R = np.zeros(dims + (2,))
         self.Np = np.zeros(dims + (2,) + dims)
+
+        self.Pi = np.zeros(dims)
+        self.V = np.zeros(dims)
 
         self.current_state  = None
         self.last_state  = None
@@ -49,10 +53,10 @@ class ModelBasedLearner:
 
         new_action = 0
 
-        if self.N[basis(state)].any() == 0:
+        if self.N[self.basis(state)].any() == 0:
             new_action = np.argmax(self.R[self.basis(state)])
         else:
-            new_action = np.argmax(self.R[self.basis(state)]/self.N[basis(state)])
+            new_action = np.argmax(self.R[self.basis(state)]/self.N[self.basis(state)])
 
         new_state  = state
 
@@ -97,6 +101,65 @@ class ModelBasedLearner:
                 self.bin(state["monkey"]["bot"],self.monkey_bot_range,self.monkey_bot_bins), \
                 self.bin(state["monkey"]["top"],self.monkey_top_range,self.monkey_top_bins))
 
+    def policy_iteration(self):
+        # Update value function
+        V_ = np.copy(self.V)
+
+        for s, v in np.ndenumerate(self.V):
+            a = (self.Pi[s],)
+
+            v = R[s + a] + self.gamma * np.dot(self.Np[s + a]/self.N[s + a], V_)
+            self.V[s] = v
+
+        # Update policy
+        for s, v in np.ndenumerate(self.Pi):
+            v = np.argmax(R[s] + self.gamma * np.dot(self.Np[s]/self.N[s].reshape((2,1)), V_))
+            self.Pi[s] = v
+
+def evaluate(x, iters=50):
+
+    learner = ModelBasedLearner()
+    learner.gamma = x
+
+    highscore = 0
+    avgscore = 0.0
+
+    for ii in xrange(iters):
+
+        # Make a new monkey object.
+        swing = SwingyMonkey(sound=False,            # Don't play sounds.
+                             text="Epoch %d" % (ii), # Display the epoch on screen.
+                             tick_length=1,          # Make game ticks super fast.
+                             action_callback=learner.action_callback,
+                             reward_callback=learner.reward_callback)
+
+        # Loop until you hit something.
+        while swing.game_loop():
+            pass
+
+        score = swing.get_state()['score']
+        highscore = max([highscore, score])
+        avgscore = (ii*avgscore+score)/(ii+1)
+        # print avgscore
+
+        # Reset the state of the learner.
+        learner.reset()
+
+    print x, " : ", avgscore, highscore
+    return -avgscore
+
+best_parameters = 0
+best_value = 0
+for gamma in np.arange(0.4,0.5,0.02):
+    parameters = gamma
+    value = evaluate(parameters)
+    if value < best_value:
+        best_parameters = parameters
+        print "Best: ", parameters, " : ", value
+
+print best_parameters
+
+'''
 iters = 100
 learner = ModelBasedLearner()
 
@@ -115,3 +178,4 @@ for ii in xrange(iters):
 
     # Reset the state of the learner.
     learner.reset()
+'''

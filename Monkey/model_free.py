@@ -62,7 +62,7 @@ class ModelFreeLearner:
         self.last_state  = self.current_state
         self.current_state = new_state
 
-        s  = basis(state)
+        s  = self.basis(state)
         a  = (self.last_action,)
         self.k[s + a] += 1
 

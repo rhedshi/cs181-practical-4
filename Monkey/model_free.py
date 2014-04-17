@@ -81,9 +81,9 @@ class Learner:
         self.last_state  = self.current_state
         self.current_state = new_state
 
-        s  = basis(state)
+        """"s  = basis(state)
         a  = (self.last_action,)
-        self.k[s + a] += 1
+        self.k[s + a] += 1"""
 
         # print state
         # print self.last_action
@@ -107,8 +107,7 @@ class Learner:
             """if self.k[s + a] < 3:
                 alpha = 0.5
             else:
-                alpha = 1.0 / self.k[s + a]
-                """
+                alpha = 1.0 / self.k[s + a]"""
 
             self.Q[s + a] = self.Q[s + a] + alpha * (reward + gamma * np.max(self.Q[sp]) - self.Q[s + a] )
 

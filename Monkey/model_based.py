@@ -2,6 +2,7 @@ import numpy as np
 import numpy.random as npr
 import sys
 import math
+import random
 
 from SwingyMonkey import SwingyMonkey
 
@@ -24,7 +25,7 @@ class ModelBasedLearner:
         self.gamma = 0.5
 
         dims = self.basis_dimensions()
-        self.N = np.zeros(dims + (2,))
+        self.N = np.ones(dims + (2,))
         self.R = np.zeros(dims + (2,))
         self.Np = np.zeros(dims + (2,) + dims)
 
@@ -51,12 +52,12 @@ class ModelBasedLearner:
         # You'll need to take an action, too, and return it.
         # Return 0 to swing and 1 to jump.
 
-        new_action = 0
+        new_action = self.Pi[self.basis(state)]
 
-        if self.N[self.basis(state)].any() == 0:
-            new_action = np.argmax(self.R[self.basis(state)])
-        else:
-            new_action = np.argmax(self.R[self.basis(state)]/self.N[self.basis(state)])
+        # if self.N[self.basis(state)].any() == 0:
+        #     new_action = np.argmax(self.R[self.basis(state)])
+        # else:
+        #     new_action = np.argmax(self.R[self.basis(state)]/self.N[self.basis(state)])
 
         new_state  = state
 
@@ -64,12 +65,13 @@ class ModelBasedLearner:
         self.last_state  = self.current_state
         self.current_state = new_state
 
-        s  = self.basis(self.last_state)
-        sp = self.basis(self.current_state)
-        a  = (self.last_action,)
+        if (self.last_state != None):
+            s  = self.basis(self.last_state)
+            sp = self.basis(self.current_state)
+            a  = (self.last_action,)
 
-        self.N[s + a] += 1
-        self.Np[s + a + sp] += 1
+            self.N[s + a] += 1
+            self.Np[s + a + sp] += 1
 
         return self.last_action
 
@@ -107,13 +109,14 @@ class ModelBasedLearner:
 
         for s, v in np.ndenumerate(self.V):
             a = (self.Pi[s],)
-
-            v = R[s + a] + self.gamma * np.dot(self.Np[s + a]/self.N[s + a], V_)
+            # Here is the problem with the shapes of the matrices
+            v = self.R[s + a] + self.gamma * np.dot(self.Np[s + a]/self.N[s + a], V_)
             self.V[s] = v
 
         # Update policy
         for s, v in np.ndenumerate(self.Pi):
-            v = np.argmax(R[s] + self.gamma * np.dot(self.Np[s]/self.N[s].reshape((2,1)), V_))
+            # Here is the problem with the shapes of the matrices
+            v = np.argmax(self.R[s] + self.gamma * np.dot(self.Np[s]/self.N[s].reshape((2,1)), V_))
             self.Pi[s] = v
 
 def evaluate(x, iters=50):
@@ -144,6 +147,8 @@ def evaluate(x, iters=50):
 
         # Reset the state of the learner.
         learner.reset()
+        # Try to work in a planning calculation for the policy iteration
+        # learner.policy_iteration()
 
     print x, " : ", avgscore, highscore
     return -avgscore

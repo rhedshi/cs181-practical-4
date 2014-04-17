@@ -27,8 +27,8 @@ class TDValueLearner:
         self.monkey_top_range = (0, 450)
         self.monkey_top_bins = bin_count
 
-        self.alpha = 0.5
-        self.gamma = 0.5
+        self.alpha = 0.1
+        self.gamma = 0.1
         self.epsilon = 0.1
 
         self.current_state  = None
@@ -38,7 +38,7 @@ class TDValueLearner:
 
         # dimensions of s
         dims = self.basis_dimensions()
-        
+
         # learned value of state s
         self.V = np.zeros(dims)
 
@@ -53,7 +53,7 @@ class TDValueLearner:
         self.Np = np.zeros(dims + (2,) + dims)
 
         # note that to calculate the empirical distribution of the transition model P(sp | s,a),
-        # you can do: 
+        # you can do:
         #     self.Np[ s + a + (Ellipsis,) ] / self.N[(Ellipsis,) + a]
 
         'Number of times taken action a from each state s'
@@ -75,7 +75,7 @@ class TDValueLearner:
         self.current_state = state
         s  = self.basis(state)
 
-        # plan 
+        # plan
         if (random.random() < self.epsilon):
             # with some probability self.epsilon, just pick a random action
             new_action = random.choice((0,1))
@@ -83,8 +83,8 @@ class TDValueLearner:
             # otherwise plan based on the learned transition model
             # array of expected values for each possible action
             expected_values = np.array([ np.dot( (self.Np[ s + a + (Ellipsis,) ] / self.N[(Ellipsis,) + a]).flat, self.V.flat ) for a in [(0,), (1,)] ])
-            
-            # pick the new action pi(s) as the action with the largest expected value 
+
+            # pick the new action pi(s) as the action with the largest expected value
             new_action =  np.argmax(self.R[s + (Ellipsis,)] + expected_values)
 
         # store last action, record exploration
@@ -116,9 +116,9 @@ class TDValueLearner:
 
             # update V
             self.V[s] = self.V[s] + alpha * ( (reward + self.gamma * self.V[sp]) - self.V[s] )
-            
+
             # update R with a "running average"
-            self.R[s + a] = (self.R[s + a] * self.k[s + a] + reward) / (self.R[s + a] + 1)
+            self.R[s + a] = (self.R[s + a] * (self.k[s + a] - 1) + reward) / (self.R[s + a] + 1)
 
 
         self.last_reward = reward

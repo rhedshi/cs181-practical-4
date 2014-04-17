@@ -38,7 +38,11 @@ class TDValueLearner:
 
         # dimensions of s
         dims = self.basis_dimensions()
+        
+        # learned value of state s
         self.V = np.zeros(dims)
+
+        # learned reward of state s
         self.R = np.zeros(dims + (2,))
 
         # self.N[s + a] = number of times we've taken action a from state s
@@ -48,7 +52,9 @@ class TDValueLearner:
         # after taking action a in state s
         self.Np = np.zeros(dims + (2,) + dims)
 
-        # note that P(sp | s,a) = self.Np[ s + a + (Ellipsis,) ] / self.N[(Ellipsis,) + a]
+        # note that to calculate the empirical distribution of the transition model P(sp | s,a),
+        # you can do: 
+        #     self.Np[ s + a + (Ellipsis,) ] / self.N[(Ellipsis,) + a]
 
         'Number of times taken action a from each state s'
         self.k = np.ones(dims + (2,))
@@ -71,12 +77,15 @@ class TDValueLearner:
 
         # plan 
         if (random.random() < self.epsilon):
+            # with some probability self.epsilon, just pick a random action
             new_action = random.choice((0,1))
         else:
-
-
+            # otherwise plan based on the learned transition model
+            # array of expected values for each possible action
             expected_values = np.array([ np.dot( (self.Np[ s + a + (Ellipsis,) ] / self.N[(Ellipsis,) + a]).flat, self.V.flat ) for a in [(0,), (1,)] ])
-            new_action =  np.argmax(self.R[s + (Ellipsis,)] + )
+            
+            # pick the new action pi(s) as the action with the largest expected value 
+            new_action =  np.argmax(self.R[s + (Ellipsis,)] + expected_values)
 
         # store last action, record exploration
         self.last_action = new_action
@@ -108,7 +117,7 @@ class TDValueLearner:
             # update V
             self.V[s] = self.V[s] + alpha * ( (reward + self.gamma * self.V[sp]) - self.V[s] )
             
-            # update R
+            # update R with a "running average"
             self.R[s + a] = (self.R[s + a] * self.k[s + a] + reward) / (self.R[s + a] + 1)
 
 

@@ -9,10 +9,10 @@ import random
 from SwingyMonkey import SwingyMonkey
 
 
-class ModelFreeLearner:
+class TDValueLearner:
 
     def __init__(self):
-        bin_count = 20
+        bin_count = 5
 
         # self.tree_bot_range = (0, 400)
         # self.tree_bot_bins = 10
@@ -36,11 +36,28 @@ class ModelFreeLearner:
         self.last_action = None
         self.last_reward = None
 
-        dims = self.basis_dimensions() + (2,)
-        self.Q = np.zeros(dims)
+        # dimensions of s
+        dims = self.basis_dimensions()
+        
+        # learned value of state s
+        self.V = np.zeros(dims)
+
+        # learned reward of state s
+        self.R = np.zeros(dims + (2,))
+
+        # self.N[s + a] = number of times we've taken action a from state s
+        self.N = np.ones(dims + (2,))
+
+        # self.Np[s + a + sp] = number of times we've transitioned to state sp
+        # after taking action a in state s
+        self.Np = np.zeros(dims + (2,) + dims)
+
+        # note that to calculate the empirical distribution of the transition model P(sp | s,a),
+        # you can do: 
+        #     self.Np[ s + a + (Ellipsis,) ] / self.N[(Ellipsis,) + a]
 
         'Number of times taken action a from each state s'
-        self.k = np.ones(dims)
+        self.k = np.ones(dims + (2,))
 
     def reset(self):
         self.current_state  = None
@@ -52,28 +69,38 @@ class ModelFreeLearner:
         '''Implement this function to learn things and take actions.
         Return 0 if you don't want to jump and 1 if you do.'''
 
-        # You might do some learning here based on the current state and the last state.
 
-        # You'll need to take an action, too, and return it.
-        # Return 0 to swing and 1 to jump.
+        # store state, last state for learning in reward_callback
+        self.last_state  = self.current_state
+        self.current_state = state
+        s  = self.basis(state)
 
+        # plan 
         if (random.random() < self.epsilon):
+            # with some probability self.epsilon, just pick a random action
             new_action = random.choice((0,1))
         else:
-            new_action = np.argmax(self.Q[self.basis(state)])
-        new_state  = state
+            # otherwise plan based on the learned transition model
+            # array of expected values for each possible action
+            expected_values = np.array([ np.dot( (self.Np[ s + a + (Ellipsis,) ] / self.N[(Ellipsis,) + a]).flat, self.V.flat ) for a in [(0,), (1,)] ])
+            
+            # pick the new action pi(s) as the action with the largest expected value 
+            new_action =  np.argmax(self.R[s + (Ellipsis,)] + expected_values)
 
+        # store last action, record exploration
         self.last_action = new_action
-        self.last_state  = self.current_state
-        self.current_state = new_state
-
-        s  = self.basis(state)
         a  = (self.last_action,)
         self.k[s + a] += 1
 
-        # print state
-        # print self.last_action
-        # print self.Q
+        # learn the transition model
+        if (self.last_state != None):
+            s  = self.basis(self.last_state)
+            sp = self.basis(self.current_state)
+            a  = (self.last_action,)
+
+            self.N[s + a] += 1
+            self.Np[s + a + sp] += 1
+
         return self.last_action
 
     def reward_callback(self, reward):
@@ -84,14 +111,15 @@ class ModelFreeLearner:
             sp = self.basis(self.current_state)
             a  = (self.last_action,)
 
-            # print s + a , " : ", self.Q[s + a]
-            # print sp + a, " : ", self.Q[sp + a]
-            # print reward
-            # print '-------'
 
             alpha = 1.0 / self.k[s + a]
 
-            self.Q[s + a] = self.Q[s + a] + alpha * (reward + self.gamma * np.max(self.Q[sp]) - self.Q[s + a] )
+            # update V
+            self.V[s] = self.V[s] + alpha * ( (reward + self.gamma * self.V[sp]) - self.V[s] )
+            
+            # update R with a "running average"
+            self.R[s + a] = (self.R[s + a] * self.k[s + a] + reward) / (self.R[s + a] + 1)
+
 
         self.last_reward = reward
 
@@ -122,7 +150,7 @@ class ModelFreeLearner:
 
 def evaluate(gamma=0.4, iters=100, chatter=True):
 
-    learner = ModelFreeLearner()
+    learner = TDValueLearner()
     learner.gamma = gamma
 
     highscore = 0

@@ -1,0 +1,76 @@
+\documentclass[11pt]{amsart}
+\usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ...
+%\geometry{landscape}                % Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{epstopdf}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{commath}
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+% Declare commands
+\newcommand{\mat}[1]{\mathbf{#1}}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\title{CS 181 -- Practical 4}
+\author{Casey Grun, Sam Kim, Rhed Shi}
+%\date{}                                           % Activate to display a given date or no date
+
+\begin{document}
+\maketitle
+
+% -----------------------------------------------------------------------------
+\section{Warmup}
+
+% -----------------------------------------------------------------------------
+\section{Reinforcement Learning}
+
+Our challenge for this week was to implement a reinforcement learning to play
+the game ``Swingy Monkey.'' We pursued three independent approaches to solve this 
+problem:
+
+\subsection{Q-learning}
+
+First, we implemented a the model-free ``Q-learning'' algorithm. Q-learning works
+by learning the function $Q(s,a)$ (the expected value of an action $a$ from a 
+state $s$). We begin with a uniform estimate of $Q(s,a) = 0 \forall s \forall a$.
+At each time point during epoch $t$, we plan the next action $\pi(s)$ given the 
+current state $s$, according to the following ``$\epsilon$-greedy'' policy:
+$$\pi_t(s) = \begin{cases} 
+\argmax_{a \in \mathcal{A}} Q(s,a) & \text{with probability } 1-\epsilon(t) \\
+\text{random } a \in {0,1}         & \text{with probability } \epsilon(t) 
+\end{cases}$$
+where $\epsilon(t) = 1/t$. This allows exploration of new states at early time 
+points and exploitation at later time points.
+
+Upon taking an action $a$ (during epoch $t$), recieving a reward $r$, and observing a transition from $s$
+to $s'$, we update our running estimate of $Q(s,a)$ as follows:
+$$Q(s,a) \gets Q(s,a) + \alpha_k(s,a) \left[ (r + \gamma \max_{a' \in \mathcal{A}} Q(s', a')) - Q(s,a) \right]$$
+where the learning rate $\alpha_k(s,a) = 1/k$, and $k$ is the number of times we've visited state $s$ and performed
+action $a$. This again reflects our desire to gradually reduce the rate of change of our 
+policy (and therefore $Q$) over epochs in order to exploit the benefits of our earlier exploration.
+
+\subsection{Model-based learning}
+
+\subsection{TD-value learning}
+
+% -----------------------------------------------------------------------------
+\section{Conclusion}
+
+
+% -----------------------------------------------------------------------------
+\begingroup
+\begin{thebibliography}{9}
+
+%\bibitem{LSMR}
+%Fong, David Chin-Lung, and Michael Saunders. "LSMR: An iterative algorithm for sparse least-squares problems."
+%\emph{SIAM Journal on Scientific Computing} 33.5 (2011): 2950-2971
+
+\end{thebibliography}
+\endgroup
+
+\end{document}

@@ -12,7 +12,7 @@ from SwingyMonkey import SwingyMonkey
 class TDValueLearner:
 
     def __init__(self):
-        bin_count = 5
+        bin_count = 10
 
         # self.tree_bot_range = (0, 400)
         # self.tree_bot_bins = 10
@@ -26,6 +26,8 @@ class TDValueLearner:
         # self.monkey_bot_bins = 10
         self.monkey_top_range = (0, 450)
         self.monkey_top_bins = bin_count
+        self.top_diff_range = (-400, 450)
+        self.top_diff_bins = 10
 
         self.alpha = 0.1
         self.gamma = 0.1
@@ -113,6 +115,7 @@ class TDValueLearner:
 
 
             alpha = 1.0 / self.k[s + a]
+            alpha = 0.1
 
             # update V
             self.V[s] = self.V[s] + alpha * ( (reward + self.gamma * self.V[sp]) - self.V[s] )
@@ -131,20 +134,23 @@ class TDValueLearner:
     def basis_dimensions(self):
         return (\
             # self.tree_bot_bins, \
-            self.tree_top_bins, self.tree_dist_bins, \
+            #self.tree_top_bins,
+            self.tree_dist_bins, \
             self.monkey_vel_bins, \
             # self.monkey_bot_bins, \
-            self.monkey_top_bins)
+            # self.monkey_top_bins, \
+            self.top_diff_bins)
 
     def basis(self, state):
         return (\
                 # self.bin(state["tree"]["bot"],self.tree_bot_range,self.tree_bot_bins),    \
-                self.bin(state["tree"]["top"],self.tree_top_range,self.tree_top_bins),    \
+                #self.bin(state["tree"]["top"],self.tree_top_range,self.tree_top_bins),    \
                 self.bin(state["tree"]["dist"],self.tree_dist_range,self.tree_dist_bins), \
 
                 self.bin(state["monkey"]["vel"],self.monkey_vel_range,self.monkey_vel_bins), \
                 # self.bin(state["monkey"]["bot"],self.monkey_bot_range,self.monkey_bot_bins), \
-                self.bin(state["monkey"]["top"],self.monkey_top_range,self.monkey_top_bins))
+                #self.bin(state["monkey"]["top"],self.monkey_top_range,self.monkey_top_bins),
+                self.bin(state["tree"]["top"]-state["monkey"]["top"],self.top_diff_range,self.top_diff_bins))
 
 
 

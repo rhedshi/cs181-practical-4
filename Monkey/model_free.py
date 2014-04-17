@@ -12,7 +12,7 @@ from SwingyMonkey import SwingyMonkey
 class ModelFreeLearner:
 
     def __init__(self):
-        bin_count = 20
+        bin_count = 10
 
         # self.tree_bot_range = (0, 400)
         # self.tree_bot_bins = 10

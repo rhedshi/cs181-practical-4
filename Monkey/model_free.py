@@ -14,18 +14,18 @@ class ModelFreeLearner:
     def __init__(self):
         bin_count = 10
 
-        self.tree_bot_range = (0, 400)
-        self.tree_bot_bins = 10
-        self.tree_top_range = (0, 400)
-        self.tree_top_bins = bin_count
+        #self.tree_bot_range = (0, 400)
+        #self.tree_bot_bins = 10
+        #self.tree_top_range = (0, 400)
+        #self.tree_top_bins = bin_count
         self.tree_dist_range = (0, 600)
-        self.tree_dist_bins = bin_count
+        self.tree_dist_bins = 20
         self.monkey_vel_range = (-50,50)
         self.monkey_vel_bins = 10
-        self.monkey_bot_range = (0, 450)
-        self.monkey_bot_bins = 10
-        self.monkey_top_range = (0, 450)
-        self.monkey_top_bins = bin_count
+        #self.monkey_bot_range = (0, 450)
+        #self.monkey_bot_bins = 10
+        #self.monkey_top_range = (0, 450)
+        #self.monkey_top_bins = bin_count
         self.top_diff_range = (-400, 450)
         self.top_diff_bins = 20
 
@@ -99,9 +99,13 @@ class ModelFreeLearner:
             else:
                 alpha = 0.01 / self.k[s + a]"""
             if self.iter < 100:
+                alpha = 0.1
+            elif self.iter < 200:
                 alpha = 0.01
-            else:
+            elif self.iter < 500:
                 alpha = 0.001
+            else:
+                alpha = 0.0001
 
             self.Q[s + a] = self.Q[s + a] + alpha * (reward + self.gamma * np.max(self.Q[sp]) - self.Q[s + a] )
 

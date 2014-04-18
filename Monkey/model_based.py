@@ -141,7 +141,7 @@ class ModelBasedLearner:
 
         A = np.insert(np.insert(self.transition_matrix(),0,0,axis=0),0,reward,axis=1)
         B = np.insert(self.V,0,1)
-        self.V = scipy.linalg.solve(A,B)[1:]
+        self.V = np.linalg.solve(A,B)[1:]
 
     def transition_matrix(self):
         '''
@@ -218,8 +218,8 @@ def evaluate(x, iters=50):
 
         # Reset the state of the learner.
         # learner.reset()
-        # Try to work in a planning calculation for the policy iteration
-        learner.value_iteration()
+        learner.policy_iteration()
+        # learner.value_iteration()
 
     print x, " : ", avgscore, highscore
     return -avgscore

@@ -79,6 +79,14 @@ In the end, we are able to consistently get scores of over 100, up to over 150, 
 
 \subsection{Model-based learning}
 
+Next, we implemented the model-based learning. In this model, we are not concerned with learning which actions are good or bad, but rather which states are good or bad and how the states are affected by our actions, and we circumvent the credit assignment problem. 
+
+We keep track of the number of times a certain state $s$ is reached and action $a$ was taken in $N(s,a)$. Similarly, we keep track of the cumulative rewards for state $s$ and action $a$ in $R(s,a)$. Lastly, we keep track of the number of times state $s'$ was reached from state $s$ through action $a$ in $N(s,a,s')$. 
+
+The probability of going from state $s$ to another state $s'$ is simply $N(s,a,s')/N(s,a)$, and we can generate the transition matrix by calculating the probabilities for each combination of states.
+
+After every action, we update the policy using either value iteration or policy iteration as described above and below.
+
 \subsection{TD-value learning}
 
 Finally, we implemented temporal difference value learning. In this method, we learn a model of the value function $V(s)$, the transition model $P(s'|s,a)$, and the reward function $R(s,a)$. The transition model was learned as in the model-based approach above, where we maintained the empirical distribution. The reward function was learned by a running average, where each time we recieved a reward $r$ from taking action $a$ at state $s$ for the $k$-th time, we updated $R(s,a)$ as:

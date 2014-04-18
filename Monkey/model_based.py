@@ -190,15 +190,20 @@ class ModelBasedLearner:
             if np.isclose(self.V, V_copy, atol=0.1, rtol=0.0).all():
                 break
 
-def evaluate(x, iters=50):
+def evaluate(gamma=0.4, iters=100, chatter=True):
 
-    learner = ModelBasedLearner()
-    learner.gamma = x
+    learner = ModelFreeLearner()
+    learner.gamma = gamma
 
     highscore = 0
     avgscore = 0.0
 
+    if chatter:
+        print "epoch", "\t", "score", "\t", "high", "\t", "avg"
+
     for ii in xrange(iters):
+
+        learner.epsilon = 1/(ii+1)
 
         # Make a new monkey object.
         swing = SwingyMonkey(sound=False,            # Don't play sounds.
@@ -214,44 +219,30 @@ def evaluate(x, iters=50):
         score = swing.get_state()['score']
         highscore = max([highscore, score])
         avgscore = (ii*avgscore+score)/(ii+1)
-        # print avgscore
+
+        if chatter:
+            print ii, "\t", score, "\t", highscore, "\t", avgscore
 
         # Reset the state of the learner.
-        # learner.reset()
-        learner.policy_iteration()
-        # learner.value_iteration()
+        learner.reset()
 
-    print x, " : ", avgscore, highscore
     return -avgscore
 
-best_parameters = 0
-best_value = 0
-for gamma in np.arange(0.4,0.5,0.02):
-    parameters = gamma
-    value = evaluate(parameters)
-    if value < best_value:
-        best_parameters = parameters
-        print "Best: ", parameters, " : ", value
 
-print best_parameters
+def find_hyperparameters():
 
-'''
-iters = 100
-learner = ModelBasedLearner()
+    # find the best value for hyperparameters
+    best_parameters = (0,0)
+    best_value = 0
+    for gamma in np.arange(0.1,1,0.1):
+        parameters = {"gamma": gamma}
+        value = evaluate(**parameters)
+        if value < best_value:
+            best_parameters = parameters
+            print "Best: ",parameters, " : ", value
 
-for ii in xrange(iters):
 
-    # Make a new monkey object.
-    swing = SwingyMonkey(sound=False,            # Don't play sounds.
-                         text="Epoch %d" % (ii), # Display the epoch on screen.
-                         tick_length=1,          # Make game ticks super fast.
-                         action_callback=learner.action_callback,
-                         reward_callback=learner.reward_callback)
+    print best_parameters
+    return best_parameters
 
-    # Loop until you hit something.
-    while swing.game_loop():
-        pass
-
-    # Reset the state of the learner.
-    learner.reset()
-'''
+evaluate(iters=1000,gamma=0.4)

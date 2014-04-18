@@ -25,6 +25,8 @@ class ModelBasedLearner:
 
         self.gamma = 0.5
 
+        self.epsilon = 0
+
         dims = self.basis_dimensions()
         self.N = np.ones(dims + (2,))
         self.R = np.zeros(dims + (2,))
@@ -55,7 +57,10 @@ class ModelBasedLearner:
         # You'll need to take an action, too, and return it.
         # Return 0 to swing and 1 to jump.
 
-        new_action = self.Pi[self.basis(state)]
+        if (random.random() < self.epsilon):
+            new_action = random.choice((0,1))
+        else:
+            new_action = self.Pi[self.basis(state)]
 
         # if self.N[self.basis(state)].any() == 0:
         #     new_action = np.argmax(self.R[self.basis(state)])
@@ -192,7 +197,7 @@ class ModelBasedLearner:
 
 def evaluate(gamma=0.4, iters=100, chatter=True):
 
-    learner = ModelFreeLearner()
+    learner = ModelBasedLearner()
     learner.gamma = gamma
 
     highscore = 0

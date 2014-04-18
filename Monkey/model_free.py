@@ -33,6 +33,7 @@ class ModelFreeLearner:
         self.gamma = 0.1
         self.epsilon = 0
 
+        self.current_action = None
         self.current_state  = None
         self.last_state  = None
         self.last_action = None
@@ -46,6 +47,7 @@ class ModelFreeLearner:
         self.k = np.ones(dims)
 
     def reset(self):
+        self.current_action = None
         self.current_state  = None
         self.last_state  = None
         self.last_action = None
@@ -64,6 +66,8 @@ class ModelFreeLearner:
         new_state  = state
 
         self.last_action = new_action
+        # self.last_action = self.current_action
+        # self.current_action = new_action
         self.last_state  = self.current_state
         self.current_state = new_state
 
@@ -81,22 +85,55 @@ class ModelFreeLearner:
             sp = self.basis(self.current_state)
             a  = (self.last_action,)
 
+
             # if self.k[s + a] < 10:
             #     alpha = 0.01
             # else:
             #     alpha = 0.01 / self.k[s + a]
 
+
+            # # 6), 7)
+            # if self.iter < 100:
+            #     alpha = 0.02
+            # elif self.iter < 200:
+            #     alpha = 0.01
+            # elif self.iter < 1000:
+            #     alpha = 0.001
+            # else:
+            #     alpha = 0.0001
+
+
+
+            # # 5)
+            # if self.iter < 100:
+            #     alpha = 0.05
+            # elif self.iter < 200:
+            #     alpha = 0.1
+            # elif self.iter < 1000:
+            #     alpha = 0.001
+            # else:
+            #     alpha = 0.0001
+
+
+            # # 4)
+            # if self.iter < 100:
+            #     alpha = 0.01
+            # elif self.iter < 1000:
+            #     alpha = 0.001
+            # else:
+            #     alpha = 0.0001
+
+            # 8)
             if self.iter < 100:
-                alpha = 0.1
-            elif self.iter < 200:
-                alpha = 0.01
-            elif self.iter < 500:
                 alpha = 0.001
             else:
                 alpha = 0.0001
 
+            # 1) 
             # alpha = self.alpha * (.1 if self.k[s + a] > 100 else 1)
-            # alpha = self.alpha * (1 / self.k[s + a]**(3/2))
+
+            # 3)
+            # alpha = self.alpha * (1 / self.k[s + a]**(2))
 
             self.Q[s + a] = self.Q[s + a] + alpha * (reward + self.gamma * np.max(self.Q[sp]) - self.Q[s + a] )
 

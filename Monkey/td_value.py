@@ -12,7 +12,9 @@ from SwingyMonkey import SwingyMonkey
 class TDValueLearner:
 
     def __init__(self):
-        bin_count = 5
+
+        # ranges of each possible dimension for the state space
+        bin_count = 10
 
         # self.tree_bot_range = (0, 400)
         # self.tree_bot_bins = 10
@@ -26,11 +28,15 @@ class TDValueLearner:
         # self.monkey_bot_bins = 10
         self.monkey_top_range = (0, 450)
         self.monkey_top_bins = bin_count
+        self.top_diff_range = (-400, 450)
+        self.top_diff_bins = 10
 
-        self.alpha = 0.5
-        self.gamma = 0.5
+        # default values for hyperparameters
+        self.alpha = 0.1
+        self.gamma = 0.1
         self.epsilon = 0.1
 
+        # state of MDP
         self.current_state  = None
         self.last_state  = None
         self.last_action = None
@@ -38,13 +44,14 @@ class TDValueLearner:
 
         # dimensions of s
         dims = self.basis_dimensions()
-        
+
         # learned value of state s
         self.V = np.zeros(dims)
 
         # learned reward of state s
         self.R = np.zeros(dims + (2,))
 
+        # empirical distribution for estimating transition model
         # self.N[s + a] = number of times we've taken action a from state s
         self.N = np.ones(dims + (2,))
 
@@ -53,13 +60,14 @@ class TDValueLearner:
         self.Np = np.zeros(dims + (2,) + dims)
 
         # note that to calculate the empirical distribution of the transition model P(sp | s,a),
-        # you can do: 
+        # you can do:
         #     self.Np[ s + a + (Ellipsis,) ] / self.N[(Ellipsis,) + a]
 
         'Number of times taken action a from each state s'
         self.k = np.ones(dims + (2,))
 
     def reset(self):
+        # reset state of MDP
         self.current_state  = None
         self.last_state  = None
         self.last_action = None
@@ -75,7 +83,7 @@ class TDValueLearner:
         self.current_state = state
         s  = self.basis(state)
 
-        # plan 
+        # plan
         if (random.random() < self.epsilon):
             # with some probability self.epsilon, just pick a random action
             new_action = random.choice((0,1))
@@ -83,8 +91,8 @@ class TDValueLearner:
             # otherwise plan based on the learned transition model
             # array of expected values for each possible action
             expected_values = np.array([ np.dot( (self.Np[ s + a + (Ellipsis,) ] / self.N[(Ellipsis,) + a]).flat, self.V.flat ) for a in [(0,), (1,)] ])
-            
-            # pick the new action pi(s) as the action with the largest expected value 
+
+            # pick the new action pi(s) as the action with the largest expected value
             new_action =  np.argmax(self.R[s + (Ellipsis,)] + expected_values)
 
         # store last action, record exploration
@@ -111,40 +119,51 @@ class TDValueLearner:
             sp = self.basis(self.current_state)
             a  = (self.last_action,)
 
-
-            alpha = 1.0 / self.k[s + a]
+            # lower alpha over time as we visit more frequently
+            # alpha = 1.0 / self.k[s + a]
+            alpha = 0.1
 
             # update V
             self.V[s] = self.V[s] + alpha * ( (reward + self.gamma * self.V[sp]) - self.V[s] )
-            
+
             # update R with a "running average"
-            self.R[s + a] = (self.R[s + a] * self.k[s + a] + reward) / (self.R[s + a] + 1)
+            self.R[s + a] = (self.R[s + a] * (self.k[s + a] - 1) + reward) / (self.R[s + a] + 1)
 
 
         self.last_reward = reward
 
 
     def bin(self, value, range, bins):
+        '''Divides the interval between range[0] and range[1] into equal sized 
+        bins, then determines in which of the bins value belongs'''
         bin_size = (range[1] - range[0]) / bins
         return math.floor((value - range[0]) / bin_size)
 
     def basis_dimensions(self):
+        '''Returns a tuple containing the dimensions of the state space; 
+        should match the dimensions of an object returned by self.basis'''
+
         return (\
             # self.tree_bot_bins, \
-            self.tree_top_bins, self.tree_dist_bins, \
+            #self.tree_top_bins,
+            self.tree_dist_bins, \
             self.monkey_vel_bins, \
             # self.monkey_bot_bins, \
-            self.monkey_top_bins)
+            # self.monkey_top_bins, \
+            self.top_diff_bins)
 
     def basis(self, state):
+        '''Accepts a state dict and returns a tuple representing this state; 
+        used for indexing into self.V, self.R, etc.'''
         return (\
                 # self.bin(state["tree"]["bot"],self.tree_bot_range,self.tree_bot_bins),    \
-                self.bin(state["tree"]["top"],self.tree_top_range,self.tree_top_bins),    \
+                #self.bin(state["tree"]["top"],self.tree_top_range,self.tree_top_bins),    \
                 self.bin(state["tree"]["dist"],self.tree_dist_range,self.tree_dist_bins), \
 
                 self.bin(state["monkey"]["vel"],self.monkey_vel_range,self.monkey_vel_bins), \
                 # self.bin(state["monkey"]["bot"],self.monkey_bot_range,self.monkey_bot_bins), \
-                self.bin(state["monkey"]["top"],self.monkey_top_range,self.monkey_top_bins))
+                #self.bin(state["monkey"]["top"],self.monkey_top_range,self.monkey_top_bins),
+                self.bin(state["tree"]["top"]-state["monkey"]["top"],self.top_diff_range,self.top_diff_bins))
 
 
 

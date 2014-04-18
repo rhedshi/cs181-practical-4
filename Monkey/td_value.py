@@ -96,10 +96,7 @@ class TDValueLearner:
             new_action =  np.argmax(self.R[s + (Ellipsis,)] + expected_values)
             #new_action =  np.argmax(expected_values)
 
-        # store last action, record exploration
-        self.last_action = new_action
-        a  = (self.last_action,)
-        self.k[s + a] += 1
+
 
         # learn the transition model
         if (self.last_state != None):
@@ -109,6 +106,11 @@ class TDValueLearner:
 
             self.N[s + a] += 1
             self.Np[s + a + sp] += 1
+
+        # store last action, record exploration
+        self.last_action = new_action
+        a  = (self.last_action,)
+        self.k[s + a] += 1
 
         return self.last_action
 

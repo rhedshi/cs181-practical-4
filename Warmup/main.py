@@ -7,7 +7,8 @@ gamma = 1
 pi = policy.policyIter(gamma)
 v = policy.solveV(pi, gamma)
 
-print pi, v
+print pi
+print v
 
 plot.bar(v)
 

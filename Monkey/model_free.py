@@ -26,7 +26,7 @@ class ModelFreeLearner:
         #self.monkey_bot_bins = 10
         #self.monkey_top_range = (0, 450)
         #self.monkey_top_bins = bin_count
-        self.top_diff_range = (-400, 450)
+        self.top_diff_range = (-450, 400)
         self.top_diff_bins = 20
 
         self.alpha = 0.1
@@ -129,7 +129,7 @@ class ModelFreeLearner:
             else:
                 alpha = 0.0001
 
-            # 1) 
+            # 1)
             # alpha = self.alpha * (.1 if self.k[s + a] > 100 else 1)
 
             # 3)

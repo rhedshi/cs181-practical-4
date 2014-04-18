@@ -14,18 +14,18 @@ class ModelFreeLearner:
     def __init__(self):
         bin_count = 10
 
-        self.tree_bot_range = (0, 400)
-        self.tree_bot_bins = 10
-        self.tree_top_range = (0, 400)
-        self.tree_top_bins = bin_count
+        #self.tree_bot_range = (0, 400)
+        #self.tree_bot_bins = 10
+        #self.tree_top_range = (0, 400)
+        #self.tree_top_bins = bin_count
         self.tree_dist_range = (0, 600)
-        self.tree_dist_bins = bin_count
+        self.tree_dist_bins = 10
         self.monkey_vel_range = (-50,50)
         self.monkey_vel_bins = 10
-        self.monkey_bot_range = (0, 450)
-        self.monkey_bot_bins = 10
-        self.monkey_top_range = (0, 450)
-        self.monkey_top_bins = bin_count
+        #self.monkey_bot_range = (0, 450)
+        #self.monkey_bot_bins = 10
+        #self.monkey_top_range = (0, 450)
+        #self.monkey_top_bins = bin_count
         self.top_diff_range = (-400, 450)
         self.top_diff_bins = 20
 
@@ -58,7 +58,7 @@ class ModelFreeLearner:
         '''Implement this function to learn things and take actions.
         Return 0 if you don't want to jump and 1 if you do.'''
 
-        # 
+        #
         if (random.random() < self.epsilon):
             new_action = random.choice((0,1))
         else:
@@ -115,14 +115,19 @@ class ModelFreeLearner:
             #     alpha = 0.0001
 
 
-            # 4)
+            # # 4)
+            # if self.iter < 100:
+            #     alpha = 0.01
+            # elif self.iter < 1000:
+            #     alpha = 0.001
+            # else:
+            #     alpha = 0.0001
+
+            # 8)
             if self.iter < 100:
-                alpha = 0.01
-            elif self.iter < 1000:
                 alpha = 0.001
             else:
                 alpha = 0.0001
-
 
             # 1) 
             # alpha = self.alpha * (.1 if self.k[s + a] > 100 else 1)
@@ -130,20 +135,19 @@ class ModelFreeLearner:
             # 3)
             # alpha = self.alpha * (1 / self.k[s + a]**(2))
 
-
             self.Q[s + a] = self.Q[s + a] + alpha * (reward + self.gamma * np.max(self.Q[sp]) - self.Q[s + a] )
 
         self.last_reward = reward
 
 
     def bin(self, value, range, bins):
-        '''Divides the interval between range[0] and range[1] into equal sized 
+        '''Divides the interval between range[0] and range[1] into equal sized
         bins, then determines in which of the bins value belongs'''
         bin_size = (range[1] - range[0]) / bins
         return math.floor((value - range[0]) / bin_size)
 
     def basis_dimensions(self):
-        '''Returns a tuple containing the dimensions of the state space; 
+        '''Returns a tuple containing the dimensions of the state space;
         should match the dimensions of an object returned by self.basis'''
         return (\
             # self.tree_bot_bins, \
@@ -155,7 +159,7 @@ class ModelFreeLearner:
             self.top_diff_bins)
 
     def basis(self, state):
-        '''Accepts a state dict and returns a tuple representing this state; 
+        '''Accepts a state dict and returns a tuple representing this state;
         used for indexing into self.V, self.R, etc.'''
         return (\
                 # self.bin(state["tree"]["bot"],self.tree_bot_range,self.tree_bot_bins),    \

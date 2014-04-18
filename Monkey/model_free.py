@@ -19,7 +19,7 @@ class ModelFreeLearner:
         #self.tree_top_range = (0, 400)
         #self.tree_top_bins = bin_count
         self.tree_dist_range = (0, 600)
-        self.tree_dist_bins = 20
+        self.tree_dist_bins = 10
         self.monkey_vel_range = (-50,50)
         self.monkey_vel_bins = 10
         #self.monkey_bot_range = (0, 450)

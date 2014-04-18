@@ -29,7 +29,7 @@
 The method to attack this problem is not necessarily straightforward at first sight, because on one hand, the game definitively ends when the score is 101 or higher, and on the other hand, it is possible to have an infinitely long game if one constantly misses their target and hits a blank space. Because of this latter possibility, we used an infinite horizon model to solve the game. Additionally, we implemented the policy learning algorithm as opposed to the value learning algorithm because the policy algorithm is generally considered to be better in practice.
 
 Most of the algorithm for policy iteration is straightforward, as we can solve for the best policy given the transition probabilities and values of each state using the Bellman equations
-$$\pi^*(s)=\text{argmax}_{a\in A}\left[R(s,a)+\gamma\sum_{s'\in S} P(s'|s,a)V^*(s')\right]$$
+$$\pi^*(s)=\argmax_{a\in A}\left[R(s,a)+\gamma\sum_{s'\in S} P(s'|s,a)V^*(s')\right]$$
 and when $\pi^*(s)$ remains constant in successive iterations, we have reached the optimal policy. $P(s'|s,a)$, the transition probabilities, are given by the problem. The trick is how to calculate $V^*(s')$. The values satisfy
 $$V^*(s)=R(s,\pi^*(s))+\gamma\sum_{s'\in S} P(s'|s,\pi^*(s))V^*(s')$$
 which has a unique solution.
@@ -68,8 +68,14 @@ points and exploitation at later time points.
 Upon taking an action $a$ (during epoch $t$), recieving a reward $r$, and observing a transition from $s$
 to $s'$, we update our running estimate of $Q(s,a)$ as follows:
 $$Q(s,a) \gets Q(s,a) + \alpha_k(s,a) \left[ (r + \gamma \max_{a' \in \mathcal{A}} Q(s', a')) - Q(s,a) \right].$$
-We attempted a strategy where the learning rate $\alpha_k(s,a) = 1/k$, and $k$ is the number of times we've visited state $s$ and performed action $a$. This reflects our desire to gradually reduce the rate of change of our 
-policy (and therefore $Q$) over epochs in order to exploit the benefits of our earlier exploration. However, we had much poorer results with this strategy than one where we simply set $\alpha_k(s,a) = 0.1 \forall(s,a,k)$.
+
+We attempted a strategy where the learning rate $\alpha_k(s,a) = 1/k$, and $k$ is the number of times we've visited state $s$ and performed action $a$. This reflects our desire to gradually reduce the rate of change of our policy (and therefore $Q$) over epochs in order to exploit the benefits of our earlier exploration. However, we had much poorer results with this strategy than one where we simply set $\alpha_k(s,a) = 0.1 \forall(s,a,k)$. This could be a consequence of the decay rate being too slow or fast, because when we varied $\alpha$ as a function of iteration rather than $k$ such that $\alpha=0.01$ after 100 iterations and $\alpha=0.001$ after 200 iterations, we saw better results. When $\alpha$ was constant at 0.01 or even smaller, the score would steadily increase for the first couple hundred iterations, and then decrease back down to 0 after that, signifying that the model of $Q$ was diverging.
+
+To improve learning rates, we modified the states to reduce the dimensionality of $Q$. First, the top and bottom of the tree and monkey as separate states are redundant because the monkey and the tree gap are constant heights. Next, rather than modelling the monkey and gap position separately, we used the difference in the monkey and gap position, ignoring the absolute position of either one. While at first this may seem to allow for the monkey hitting the top and bottom of the screen, we found this not to be teh case since the monkey would try to stay near the gap, which would never be off the screen. This change allowed our score to increase significantly.
+
+Finally, we discretized the number of states into bins, otherwise the dimensionality would be enormous. Appropriate bin sizes to balance convergence and performance within 500 iterations is around 20 bins for the height difference, and 10 bins for monkey velocity and distance from the tree.
+
+In the end, we are able to consistently get scores of over 100, up to over 150, after a few hundred iterations. Further improvement is certainly possible by optimizing each of the parameters (bins, $\alpha$, $\gamma$) more carefully and precisely, as we only estimated the optimal parameters.
 
 \subsection{Model-based learning}
 

@@ -37,7 +37,12 @@ which has a unique solution.
 To solve this, we set $V(101)=1$ and $V(i)=-1$ for $i \in \{102,103,...,117\}$, because after reaching these states, the game ends, so these are the final values. In this formulation, $R=0$ for all states. Plugging these into the above equation and rearranging, we get
 $$\sum_{s'=0}^{100} P(s'|s,\pi^*(s))V^*(s) - \frac{1}{\gamma}V^*(s')=-P(100|s,\pi^*(s))+\sum_{s'=102}^{117} P(s'|s,\pi^*(s))V^*(s')$$
 
-This can be expressed as a matrix equation$Ax=b$ where $x=V^*(s)$
+This can be expressed as a matrix equation $Ax=b$ where $x=V^*(s)$, which is easily solvable given that $A$ is invertible. The final values as a function of the state are shown in the figure below. $\gamma=1$.
+
+\includegraphics[width=14cm]{values_gamma1.png}
+
+We can see a peak at the state $s=85$, which is 16 below the winning score of $101$. The peak occurs here because in addition to having a $60\%$ chance of hitting the 16 on the dart board, if it misses, there is still a chance to reach 101 because the score has not gone over. For subsequent states, the value drops because there is a chance of going over if one misses the target, especially as the state approaches 101. 
+The states below 85 show a similar structure in which the states closer to 0 have a high value, and it steadily decreases as the state approaches 85. This is because for the states right below 85, it is likely to reach a state between 85 and 101, which are not optimal. We can think of the state $s=85$ as a secondary target.
 
 % -----------------------------------------------------------------------------
 \section{Reinforcement Learning}

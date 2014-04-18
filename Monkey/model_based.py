@@ -112,6 +112,29 @@ class ModelBasedLearner:
                 self.bin(state["monkey"]["top"],self.monkey_top_range,self.monkey_top_bins))
 
     def solve_V(self, pi):
+        '''
+        returns: vector of length S for self.V
+
+        ex. S = 2
+
+        solve for A * x = B, where
+
+            [ 1     0     0  ]
+            |                |
+        A = [ r_1   t_1   t_2]
+            |                |
+            [ r_2   t_3   t_4]
+
+            [ 1 ] 
+        x = [v_1]
+            [v_2]
+
+
+            [ 1 ] 
+        B = [v_1]
+            [v_2]
+
+        '''
         reward = np.array([1])
         for s in np.ndindex(np.shape(self.Pi)):
             np.append(reward, self.R[s + (self.Pi[s],)])
@@ -121,6 +144,15 @@ class ModelBasedLearner:
         self.V = scipy.linalg.solve(A,B)[1:]
 
     def transition_matrix(self):
+        '''
+        returns: S x S transition matrix with probabilities from all states s given action a to all states s'
+
+        ex. S = 2
+
+        T = [ t_1 t_2 ]
+            [ t_3 t_4 ]
+
+        '''
         transition = []
         for s in np.ndindex(np.shape(self.Pi)):
             transition.append([(self.Np[s + (self.Pi[s],) + (Ellipsis,)] / self.N[(Ellipsis,) + (self.Pi[s],)]).flatten()])
@@ -141,7 +173,7 @@ class ModelBasedLearner:
                 self.Pi[s] = np.argmax(self.Q[s])
                 print "test"
 
-            if self.Pi_copy.all() == self.Pi.all():
+            if np.array_equal(self.Pi, Pi_copy):
                 break
 
     def value_iteration(self):
@@ -150,10 +182,12 @@ class ModelBasedLearner:
 
             for s in np.ndindex(np.shape(self.Pi)):
                 expected_values = np.array([ np.dot( (self.Np[ s + a + (Ellipsis,) ] / self.N[(Ellipsis,) + a]).flat, V_copy.flat ) for a in [(0,), (1,)] ])
-                self.Pi[s] = np.argmax(self.R[s + (Ellipsis,)] + expected_values)
-                self.V[s] = np.max(self.R[s + (Ellipsis,)] + expected_values)
+                self.Pi[s] = np.argmax(self.R[s + (Ellipsis,)] + self.gamma * expected_values)
+                self.V[s] = np.max(self.R[s + (Ellipsis,)] + self.gamma * expected_values)
 
-            if (self.V - V_copy).all() < 0.01:
+            print np.count_nonzero(self.Pi)
+
+            if np.isclose(self.V, V_copy, atol=0.1, rtol=0.0).all():
                 break
 
 def evaluate(x, iters=50):

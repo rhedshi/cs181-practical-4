@@ -1,5 +1,6 @@
 import numpy as np
 import numpy.random as npr
+import scipy.linalg
 import sys
 import math
 import random
@@ -31,6 +32,8 @@ class ModelBasedLearner:
 
         self.Pi = np.zeros(dims)
         self.V = np.zeros(dims)
+
+        self.Q = np.zeros(dims + (2,))
 
         self.current_state  = None
         self.last_state  = None
@@ -91,33 +94,67 @@ class ModelBasedLearner:
 
     def basis_dimensions(self):
         return (\
-            self.tree_bot_bins, self.tree_top_bins, self.tree_dist_bins, \
-            self.monkey_vel_bins, self.monkey_bot_bins, self.monkey_top_bins)
+            # self.tree_bot_bins, \
+            self.tree_top_bins, \
+            self.tree_dist_bins, \
+            # self.monkey_vel_bins, \
+            # self.monkey_bot_bins, \
+            self.monkey_top_bins)
 
     def basis(self, state):
-        return (self.bin(state["tree"]["bot"],self.tree_bot_range,self.tree_bot_bins),    \
+        return (\
+                # self.bin(state["tree"]["bot"],self.tree_bot_range,self.tree_bot_bins),    \
                 self.bin(state["tree"]["top"],self.tree_top_range,self.tree_top_bins),    \
                 self.bin(state["tree"]["dist"],self.tree_dist_range,self.tree_dist_bins), \
 
-                self.bin(state["monkey"]["vel"],self.monkey_vel_range,self.monkey_vel_bins), \
-                self.bin(state["monkey"]["bot"],self.monkey_bot_range,self.monkey_bot_bins), \
+                # self.bin(state["monkey"]["vel"],self.monkey_vel_range,self.monkey_vel_bins), \
+                # self.bin(state["monkey"]["bot"],self.monkey_bot_range,self.monkey_bot_bins), \
                 self.bin(state["monkey"]["top"],self.monkey_top_range,self.monkey_top_bins))
 
+    def solve_V(self, pi):
+        reward = np.array([1])
+        for s in np.ndindex(np.shape(self.Pi)):
+            np.append(reward, self.R[s + (self.Pi[s],)])
+
+        A = np.insert(np.insert(self.transition_matrix(),0,0,axis=0),0,reward,axis=1)
+        B = np.insert(self.V,0,1)
+        self.V = scipy.linalg.solve(A,B)[1:]
+
+    def transition_matrix(self):
+        transition = []
+        for s in np.ndindex(np.shape(self.Pi)):
+            transition.append([(self.Np[s + (self.Pi[s],) + (Ellipsis,)] / self.N[(Ellipsis,) + (self.Pi[s],)]).flatten()])
+        transition = np.concatenate(tuple(transition),axis=0)
+        return transition
+
+
     def policy_iteration(self):
-        # Update value function
-        V_ = np.copy(self.V)
+        # Update policy iteration
+        while True:
+            Pi_copy = np.copy(self.Pi)
 
-        for s, v in np.ndenumerate(self.V):
-            a = (self.Pi[s],)
-            # Here is the problem with the shapes of the matrices
-            v = self.R[s + a] + self.gamma * np.dot(self.Np[s + a]/self.N[s + a], V_)
-            self.V[s] = v
+            self.solve_V(Pi_copy)
 
-        # Update policy
-        for s, v in np.ndenumerate(self.Pi):
-            # Here is the problem with the shapes of the matrices
-            v = np.argmax(self.R[s] + self.gamma * np.dot(self.Np[s]/self.N[s].reshape((2,1)), V_))
-            self.Pi[s] = v
+            for s in np.ndindex(np.shape(self.Pi)):
+                for a in [(0,),(1,)]:
+                    self.Q[s + a] = self.R[s + a] + self.gamma * np.dot((self.Np[s + a + (Ellipsis,)] / self.N[(Ellipsis,) + a]).flat, self.V.flat)
+                self.Pi[s] = np.argmax(self.Q[s])
+                print "test"
+
+            if self.Pi_copy.all() == self.Pi.all():
+                break
+
+    def value_iteration(self):
+        while True:
+            V_copy = np.copy(self.V)
+
+            for s in np.ndindex(np.shape(self.Pi)):
+                expected_values = np.array([ np.dot( (self.Np[ s + a + (Ellipsis,) ] / self.N[(Ellipsis,) + a]).flat, V_copy.flat ) for a in [(0,), (1,)] ])
+                self.Pi[s] = np.argmax(self.R[s + (Ellipsis,)] + expected_values)
+                self.V[s] = np.max(self.R[s + (Ellipsis,)] + expected_values)
+
+            if (self.V - V_copy).all() < 0.01:
+                break
 
 def evaluate(x, iters=50):
 
@@ -146,9 +183,9 @@ def evaluate(x, iters=50):
         # print avgscore
 
         # Reset the state of the learner.
-        learner.reset()
+        # learner.reset()
         # Try to work in a planning calculation for the policy iteration
-        # learner.policy_iteration()
+        learner.value_iteration()
 
     print x, " : ", avgscore, highscore
     return -avgscore

@@ -12,6 +12,8 @@ from SwingyMonkey import SwingyMonkey
 class TDValueLearner:
 
     def __init__(self):
+
+        # ranges of each possible dimension for the state space
         bin_count = 10
 
         # self.tree_bot_range = (0, 400)
@@ -29,10 +31,12 @@ class TDValueLearner:
         self.top_diff_range = (-400, 450)
         self.top_diff_bins = 10
 
+        # default values for hyperparameters
         self.alpha = 0.1
         self.gamma = 0.1
         self.epsilon = 0.1
 
+        # state of MDP
         self.current_state  = None
         self.last_state  = None
         self.last_action = None
@@ -47,6 +51,7 @@ class TDValueLearner:
         # learned reward of state s
         self.R = np.zeros(dims + (2,))
 
+        # empirical distribution for estimating transition model
         # self.N[s + a] = number of times we've taken action a from state s
         self.N = np.ones(dims + (2,))
 
@@ -62,6 +67,7 @@ class TDValueLearner:
         self.k = np.ones(dims + (2,))
 
     def reset(self):
+        # reset state of MDP
         self.current_state  = None
         self.last_state  = None
         self.last_action = None
@@ -113,8 +119,8 @@ class TDValueLearner:
             sp = self.basis(self.current_state)
             a  = (self.last_action,)
 
-
-            alpha = 1.0 / self.k[s + a]
+            # lower alpha over time as we visit more frequently
+            # alpha = 1.0 / self.k[s + a]
             alpha = 0.1
 
             # update V
@@ -128,10 +134,15 @@ class TDValueLearner:
 
 
     def bin(self, value, range, bins):
+        '''Divides the interval between range[0] and range[1] into equal sized 
+        bins, then determines in which of the bins value belongs'''
         bin_size = (range[1] - range[0]) / bins
         return math.floor((value - range[0]) / bin_size)
 
     def basis_dimensions(self):
+        '''Returns a tuple containing the dimensions of the state space; 
+        should match the dimensions of an object returned by self.basis'''
+
         return (\
             # self.tree_bot_bins, \
             #self.tree_top_bins,
@@ -142,6 +153,8 @@ class TDValueLearner:
             self.top_diff_bins)
 
     def basis(self, state):
+        '''Accepts a state dict and returns a tuple representing this state; 
+        used for indexing into self.V, self.R, etc.'''
         return (\
                 # self.bin(state["tree"]["bot"],self.tree_bot_range,self.tree_bot_bins),    \
                 #self.bin(state["tree"]["top"],self.tree_top_range,self.tree_top_bins),    \

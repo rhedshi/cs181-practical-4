@@ -40,7 +40,6 @@ class ModelFreeLearner:
         self.iter = 0
 
         dims = self.basis_dimensions() + (2,)
-        print dims
         self.Q = np.zeros(dims)
 
         'Number of times taken action a from each state s'
@@ -57,11 +56,7 @@ class ModelFreeLearner:
         '''Implement this function to learn things and take actions.
         Return 0 if you don't want to jump and 1 if you do.'''
 
-        # You might do some learning here based on the current state and the last state.
-
-        # You'll need to take an action, too, and return it.
-        # Return 0 to swing and 1 to jump.
-
+        #
         if (random.random() < self.epsilon):
             new_action = random.choice((0,1))
         else:
@@ -76,9 +71,6 @@ class ModelFreeLearner:
         a  = (self.last_action,)
         self.k[s + a] += 1
 
-        # print state
-        # print self.last_action
-        # print self.Q
         return self.last_action
 
     def reward_callback(self, reward):
@@ -89,15 +81,11 @@ class ModelFreeLearner:
             sp = self.basis(self.current_state)
             a  = (self.last_action,)
 
-            # print s + a , " : ", self.Q[s + a]
-            # print sp + a, " : ", self.Q[sp + a]
-            # print reward
-            # print '-------'
+            # if self.k[s + a] < 10:
+            #     alpha = 0.01
+            # else:
+            #     alpha = 0.01 / self.k[s + a]
 
-            """if self.k[s + a] < 10:
-                alpha = 0.01
-            else:
-                alpha = 0.01 / self.k[s + a]"""
             if self.iter < 100:
                 alpha = 0.1
             elif self.iter < 200:
@@ -107,16 +95,23 @@ class ModelFreeLearner:
             else:
                 alpha = 0.0001
 
+            # alpha = self.alpha * (.1 if self.k[s + a] > 100 else 1)
+            # alpha = self.alpha * (1 / self.k[s + a]**(3/2))
+
             self.Q[s + a] = self.Q[s + a] + alpha * (reward + self.gamma * np.max(self.Q[sp]) - self.Q[s + a] )
 
         self.last_reward = reward
 
 
     def bin(self, value, range, bins):
+        '''Divides the interval between range[0] and range[1] into equal sized
+        bins, then determines in which of the bins value belongs'''
         bin_size = (range[1] - range[0]) / bins
         return math.floor((value - range[0]) / bin_size)
 
     def basis_dimensions(self):
+        '''Returns a tuple containing the dimensions of the state space;
+        should match the dimensions of an object returned by self.basis'''
         return (\
             # self.tree_bot_bins, \
              #self.tree_top_bins, \
@@ -127,6 +122,8 @@ class ModelFreeLearner:
             self.top_diff_bins)
 
     def basis(self, state):
+        '''Accepts a state dict and returns a tuple representing this state;
+        used for indexing into self.V, self.R, etc.'''
         return (\
                 # self.bin(state["tree"]["bot"],self.tree_bot_range,self.tree_bot_bins),    \
                 # self.bin(state["tree"]["top"],self.tree_top_range,self.tree_top_bins),    \
@@ -146,6 +143,9 @@ def evaluate(gamma=0.4, iters=100, chatter=True):
 
     highscore = 0
     avgscore = 0.0
+
+    if chatter:
+        print "epoch", "\t", "score", "\t", "high", "\t", "avg"
 
     for ii in xrange(iters):
 
@@ -167,7 +167,7 @@ def evaluate(gamma=0.4, iters=100, chatter=True):
         avgscore = (ii*avgscore+score)/(ii+1)
 
         if chatter:
-            print ii, score, highscore, avgscore
+            print ii, "\t", score, "\t", highscore, "\t", avgscore
 
         # Reset the state of the learner.
         learner.reset()

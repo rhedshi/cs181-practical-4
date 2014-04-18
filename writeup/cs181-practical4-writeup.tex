@@ -49,14 +49,22 @@ points and exploitation at later time points.
 
 Upon taking an action $a$ (during epoch $t$), recieving a reward $r$, and observing a transition from $s$
 to $s'$, we update our running estimate of $Q(s,a)$ as follows:
-$$Q(s,a) \gets Q(s,a) + \alpha_k(s,a) \left[ (r + \gamma \max_{a' \in \mathcal{A}} Q(s', a')) - Q(s,a) \right]$$
-where the learning rate $\alpha_k(s,a) = 1/k$, and $k$ is the number of times we've visited state $s$ and performed
-action $a$. This again reflects our desire to gradually reduce the rate of change of our 
-policy (and therefore $Q$) over epochs in order to exploit the benefits of our earlier exploration.
+$$Q(s,a) \gets Q(s,a) + \alpha_k(s,a) \left[ (r + \gamma \max_{a' \in \mathcal{A}} Q(s', a')) - Q(s,a) \right].$$
+We attempted a strategy where the learning rate $\alpha_k(s,a) = 1/k$, and $k$ is the number of times we've visited state $s$ and performed action $a$. This reflects our desire to gradually reduce the rate of change of our 
+policy (and therefore $Q$) over epochs in order to exploit the benefits of our earlier exploration. However, we had much poorer results with this strategy than one where we simply set $\alpha_k(s,a) = 0.1 \forall(s,a,k)$.
 
 \subsection{Model-based learning}
 
 \subsection{TD-value learning}
+
+Finally, we implemented temporal difference value learning. In this method, we learn a model of the value function $V(s)$, the transition model $P(s'|s,a)$, and the reward function $R(s,a)$. The transition model was learned as in the model-based approach above, where we maintained the empirical distribution. The reward function was learned by a running average, where each time we recieved a reward $r$ from taking action $a$ at state $s$ for the $k$-th time, we updated $R(s,a)$ as:
+$$R(s,a) \gets (R(s,a) * k + r)/(k + 1).$$
+
+Each time we transitioned to state $s'$ from state $s$ and received reward $r$, we updated the value function according to:
+$$V(s) \gets V(s) + \alpha ((r + \gamma V(s')) - V(s)).$$
+At each step, we planned the next action $\pi(s)$ according to:
+$$\pi(s) = \argmax_{a \in \mathcal{A}} \left[ R(s,a) + \sum_{s'} P(s'|s,a) V(s') \right]$$
+where $R(s,a)$, $P(s'|s,a)$, and $V(s)$ represent our empirically-estimated values for those quantities.
 
 % -----------------------------------------------------------------------------
 \section{Conclusion}

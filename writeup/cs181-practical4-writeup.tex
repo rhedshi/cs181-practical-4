@@ -35,7 +35,7 @@ $$V^*(s)=R(s,\pi^*(s))+\gamma\sum_{s'\in S} P(s'|s,\pi^*(s))V^*(s')$$
 which has a unique solution.
 
 To solve this, we set $V(101)=1$ and $V(i)=-1$ for $i \in \{102,103,...,117\}$, because after reaching these states, the game ends, so these are the final values. In this formulation, $R=0$ for all states. Plugging these into the above equation and rearranging, we get
-$$\sum_{s'=0}^{100} P(s'|s,\pi^*(s))V^*(s) - \frac{1}{\gamma}V^*(s')=-P(100|s,\pi^*(s))+\sum_{s'=102}^{117} P(s'|s,\pi^*(s))V^*(s')$$
+$$\sum_{s'=0}^{100} P(s'|s,\pi^*(s))V^*(s') - \frac{1}{\gamma}V^*(s)=-P(100|s,\pi^*(s))+\sum_{s'=102}^{117} P(s'|s,\pi^*(s))V^*(s')$$
 
 This can be expressed as a matrix equation $Ax=b$ where $x=V^*(s)$, which is easily solvable given that $A$ is invertible. The final values as a function of the state are shown in the figure below. $\gamma=1$.
 
@@ -82,13 +82,15 @@ In the end, we are able to consistently get scores of over 100, up to over 150, 
 \subsection{TD-value learning}
 
 Finally, we implemented temporal difference value learning. In this method, we learn a model of the value function $V(s)$, the transition model $P(s'|s,a)$, and the reward function $R(s,a)$. The transition model was learned as in the model-based approach above, where we maintained the empirical distribution. The reward function was learned by a running average, where each time we recieved a reward $r$ from taking action $a$ at state $s$ for the $k$-th time, we updated $R(s,a)$ as:
-$$R(s,a) \gets (R(s,a) * k + r)/(k + 1).$$
+$$R(s,a) \gets (R(s,a) \cdot k + r)/(k + 1).$$
 
 Each time we transitioned to state $s'$ from state $s$ and received reward $r$, we updated the value function according to:
 $$V(s) \gets V(s) + \alpha ((r + \gamma V(s')) - V(s)).$$
 At each step, we planned the next action $\pi(s)$ according to:
 $$\pi(s) = \argmax_{a \in \mathcal{A}} \left[ R(s,a) + \sum_{s'} P(s'|s,a) V(s') \right]$$
 where $R(s,a)$, $P(s'|s,a)$, and $V(s)$ represent our empirically-estimated values for those quantities.
+
+We are able to get scores over 30 within 1000 iterations.
 
 % -----------------------------------------------------------------------------
 \section{Conclusion}

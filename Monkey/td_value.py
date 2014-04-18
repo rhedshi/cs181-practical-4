@@ -96,8 +96,6 @@ class TDValueLearner:
             new_action =  np.argmax(self.R[s + (Ellipsis,)] + expected_values)
             #new_action =  np.argmax(expected_values)
 
-
-
         # learn the transition model
         if (self.last_state != None):
             s  = self.basis(self.last_state)

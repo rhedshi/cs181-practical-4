@@ -12,38 +12,36 @@ from SwingyMonkey import SwingyMonkey
 class ModelFreeLearner:
 
     def __init__(self):
-        bin_count = 10
 
-        #self.tree_bot_range = (0, 400)
-        #self.tree_bot_bins = 10
-        #self.tree_top_range = (0, 400)
-        #self.tree_top_bins = bin_count
+        # discretization
         self.tree_dist_range = (0, 600)
         self.tree_dist_bins = 10
         self.monkey_vel_range = (-50,50)
         self.monkey_vel_bins = 10
-        #self.monkey_bot_range = (0, 450)
-        #self.monkey_bot_bins = 10
-        #self.monkey_top_range = (0, 450)
-        #self.monkey_top_bins = bin_count
         self.top_diff_range = (-450, 400)
         self.top_diff_bins = 20
 
-        self.alpha = 0.1
+        # hyperparameters
+        self.alpha = 0.001
         self.gamma = 0.1
         self.epsilon = 0
 
+        # state parameters
         self.current_action = None
         self.current_state  = None
         self.last_state  = None
         self.last_action = None
         self.last_reward = None
+
+        # epoch number
         self.iter = 0
 
+        # dimensionality
         dims = self.basis_dimensions() + (2,)
         self.Q = np.zeros(dims)
 
-        'Number of times taken action a from each state s'
+        # Number of times taken action a from each state s (for adaptive 
+        # learning rate)
         self.k = np.ones(dims)
 
     def reset(self):
@@ -58,16 +56,15 @@ class ModelFreeLearner:
         '''Implement this function to learn things and take actions.
         Return 0 if you don't want to jump and 1 if you do.'''
 
-        #
+        # epsilon-greedy policy
         if (random.random() < self.epsilon):
             new_action = random.choice((0,1))
         else:
             new_action = np.argmax(self.Q[self.basis(state)])
         new_state  = state
 
+        # store action and state transition for learning
         self.last_action = new_action
-        # self.last_action = self.current_action
-        # self.current_action = new_action
         self.last_state  = self.current_state
         self.current_state = new_state
 
@@ -85,56 +82,12 @@ class ModelFreeLearner:
             sp = self.basis(self.current_state)
             a  = (self.last_action,)
 
-
-            # if self.k[s + a] < 10:
-            #     alpha = 0.01
-            # else:
-            #     alpha = 0.01 / self.k[s + a]
-
-
-            # # 6), 7)
-            # if self.iter < 100:
-            #     alpha = 0.02
-            # elif self.iter < 200:
-            #     alpha = 0.01
-            # elif self.iter < 1000:
-            #     alpha = 0.001
-            # else:
-            #     alpha = 0.0001
-
-
-
-            # # 5)
-            # if self.iter < 100:
-            #     alpha = 0.05
-            # elif self.iter < 200:
-            #     alpha = 0.1
-            # elif self.iter < 1000:
-            #     alpha = 0.001
-            # else:
-            #     alpha = 0.0001
-
-
-            # # 4)
-            # if self.iter < 100:
-            #     alpha = 0.01
-            # elif self.iter < 1000:
-            #     alpha = 0.001
-            # else:
-            #     alpha = 0.0001
-
-            # 8)
             if self.iter < 100:
-                alpha = 0.001
+                alpha = self.alpha
             else:
-                alpha = 0.0001
+                alpha = self.alpha*0.1
 
-            # 1)
-            # alpha = self.alpha * (.1 if self.k[s + a] > 100 else 1)
-
-            # 3)
-            # alpha = self.alpha * (1 / self.k[s + a]**(2))
-
+            # learn Q
             self.Q[s + a] = self.Q[s + a] + alpha * (reward + self.gamma * np.max(self.Q[sp]) - self.Q[s + a] )
 
         self.last_reward = reward
@@ -150,25 +103,16 @@ class ModelFreeLearner:
         '''Returns a tuple containing the dimensions of the state space;
         should match the dimensions of an object returned by self.basis'''
         return (\
-            # self.tree_bot_bins, \
-             #self.tree_top_bins, \
             self.tree_dist_bins, \
             self.monkey_vel_bins, \
-            # self.monkey_bot_bins, \
-             #self.monkey_top_bins)#, \
             self.top_diff_bins)
 
     def basis(self, state):
         '''Accepts a state dict and returns a tuple representing this state;
         used for indexing into self.V, self.R, etc.'''
         return (\
-                # self.bin(state["tree"]["bot"],self.tree_bot_range,self.tree_bot_bins),    \
-                # self.bin(state["tree"]["top"],self.tree_top_range,self.tree_top_bins),    \
                 self.bin(state["tree"]["dist"],self.tree_dist_range,self.tree_dist_bins), \
-
                 self.bin(state["monkey"]["vel"],self.monkey_vel_range,self.monkey_vel_bins), \
-                # self.bin(state["monkey"]["bot"],self.monkey_bot_range,self.monkey_bot_bins), \
-                #self.bin(state["monkey"]["top"],self.monkey_top_range,self.monkey_top_bins))
                 self.bin(state["tree"]["top"]-state["monkey"]["top"],self.top_diff_range,self.top_diff_bins))
 
 
